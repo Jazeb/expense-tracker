@@ -66,8 +66,6 @@ const Budget = () => {
 };
 
 const TotalExpenseByCategory = ({ c, progress }) => {
-  console.log("QQQASSSSSSSSSSSSSSSSSSSSSSSSSSSSS");
-
   return (
     <View style={styles.transactions_history}>
       <Image source={incomeImage} style={{ width: 50, height: 50 }} />
@@ -114,7 +112,7 @@ const HomeScreen = ({ navigation }) => {
   const [currentMonthExpense, setCurrentMonthExpenses] = useState(0);
   const [expenseByCategory, setExpenseByCategory] = useState([]);
 
-  const income = 130000;
+  const income = 180000;
 
   // const [remainingAmount, setRemainingAmount] = useState(0);
   // const _setRemaingAmount = async () => {
@@ -128,7 +126,6 @@ const HomeScreen = ({ navigation }) => {
 
   const _setBudgetedAmount = async () => {
     const _selectedCategories = await getSelectedCategories();
-
     if (_selectedCategories) {
       const _budgetedAmount = _selectedCategories.reduce((sum, c) => sum + +c.budgetAmount, 0);
       return setBudgetedAmount(_budgetedAmount);
@@ -137,9 +134,7 @@ const HomeScreen = ({ navigation }) => {
 
   const _recentTxnCategories = async () => {
     const _selectedCategories = await getSelectedCategories();
-
     if (_selectedCategories) {
-      console.log("yes found categories");
       setRecentTxnCategories(_selectedCategories);
     }
   };
@@ -172,7 +167,6 @@ const HomeScreen = ({ navigation }) => {
   };
 
   useFocusEffect(() => {
-    // _setRemaingAmount();
     _setBudgetedAmount();
     _setCurrentMonthExpenses();
   });
@@ -200,44 +194,37 @@ const HomeScreen = ({ navigation }) => {
 
       {/* income expense info */}
       <View style={styles.income_expense}>
-        <View style={styles.income_expense_layout}>
-          {/* income view */}
+        {/* <View style={styles.income_expense_layout}> */}
+        {/* income view */}
 
-          <Image source={incomeImage} style={styles.income_expense_layout.image} />
+        <Image source={incomeImage} style={styles.income_expense_layout.image} />
 
-          <View>
-            <Text style={styles.income_expense_font}>Income</Text>
-            <Text
-              style={{
-                marginTop: 5,
-                color: "#191819",
-                fontWeight: "600",
-                fontSize: 14,
-              }}
-            >
-              {formatCurrency(income)}
-            </Text>
-          </View>
-
-          {/* expense view */}
-
-          <Image source={expenseImage} style={styles.income_expense_layout.image} />
-
-          {/* text view */}
-          <View>
-            <Text style={styles.income_expense_font}>Expense</Text>
-            <Text
-              style={{
-                marginTop: 5,
-                color: budgetedAmount >= income ? "red" : "#191819",
-                fontWeight: "600",
-                fontSize: 14,
-              }}
-            >
-              {formatCurrency(budgetedAmount)}
-            </Text>
-          </View>
+        <View>
+          <Text style={styles.income_expense_font}>Income</Text>
+          <Text style={{ marginTop: 5, color: "#191819", fontWeight: "600", fontSize: 14 }}>
+            {formatCurrency(income)}
+          </Text>
         </View>
+
+        {/* expense view */}
+
+        <Image source={expenseImage} style={styles.income_expense_layout.image} />
+
+        {/* text view */}
+        <View>
+          <Text style={styles.income_expense_font}>Expense</Text>
+          <Text
+            style={{
+              marginTop: 5,
+              color: budgetedAmount >= income ? "red" : "#191819",
+              fontWeight: "600",
+              fontSize: 14,
+            }}
+          >
+            {formatCurrency(budgetedAmount)}
+          </Text>
+        </View>
+        {/* </View> */}
       </View>
 
       {/* budget */}
@@ -279,7 +266,7 @@ const HomeScreen = ({ navigation }) => {
             color: "#000",
           }}
         >
-          remaining Rs {remainingAmount}
+          remaining Rs {remainingAmount} 
         </Text>
       </View> */}
 
@@ -287,7 +274,7 @@ const HomeScreen = ({ navigation }) => {
       {/* <Periods /> */}
 
       {/* recent transactions */}
-      <Text style={{ marginLeft: 25, paddingTop: 30, paddingBottom: 20 }}>recent spendings by category</Text>
+      <Text style={{ marginLeft: 25, paddingTop: 30, paddingBottom: 20 }}>{currentMonth} spendings</Text>
 
       {/* expense progress bar */}
       {console.log("#############")}
@@ -299,9 +286,10 @@ const HomeScreen = ({ navigation }) => {
 
             const progress = calculatePercent(_expenseByCategory, c.budgetAmount);
 
-            return <TotalExpenseByCategory c={c} progress={progress} />;
+            return <TotalExpenseByCategory key={c.id} c={c} progress={progress} />;
           })}
         </ScrollView>
+
         <Pressable style={{ borderRadius: 50, position: "absolute", bottom: 0, right: 10 }} onPress={addExpense}>
           <Image style={{ width: 60, height: 60 }} source={addExpenseBtn} />
         </Pressable>
@@ -386,8 +374,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFF",
     width: "90%",
     alignSelf: "center",
+    alignItems: "center",
     height: "15%",
-    // alignSelf: "center",
+
     marginTop: -55,
     shadowColor: "rgba(0, 0, 0, 0.25)",
     shadowOffset: { width: 3, height: 1 },

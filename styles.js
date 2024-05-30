@@ -6,7 +6,7 @@ const globalStyles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
   },
   topHeader: {
-    height: "25%",
+    height: "20%",
     backgroundColor: "#38E4C4",
   },
   topHeaderFont: {

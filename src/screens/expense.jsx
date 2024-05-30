@@ -1,13 +1,11 @@
 import { useFocusEffect } from "@react-navigation/native";
 import { Text, Image, View, StyleSheet, Pressable, ScrollView } from "react-native";
 import { getExpenses } from "../../storage/database";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import dayjs from "dayjs";
 import { allCategories } from "../../constants";
 import globalStyles from "../../styles";
 import { currentMonth, formatCurrency } from "../../shared";
-
-// import { ScrollView } from "react-native-gesture-handler";
 
 const ExpenseScreen = ({ navigation }) => {
   const [recentExpenses, setRecentExpenses] = useState([]);
@@ -15,79 +13,79 @@ const ExpenseScreen = ({ navigation }) => {
   const _fetchRecentExpenses = async () => {
     try {
       const currentMonthExpenses = await getExpenses("11/2023");
-      setRecentExpenses(currentMonthExpenses || []);
+      if (currentMonthExpenses) {
+        return setRecentExpenses(currentMonthExpenses);
+      }
     } catch (error) {
       console.error(error);
     }
   };
 
-  useFocusEffect(() => {
-    _fetchRecentExpenses();
-  });
+  useFocusEffect(
+    React.useCallback(() => {
+      console.log("In callback");
+      let isActive = true;
+      isActive && _fetchRecentExpenses();
+      return () => (isActive = false);
+    }, [])
+  );
 
   const onAddExpensePress = () => navigation.navigate("addNewExpenseScreen");
 
   return (
-    <View style={globalStyles.container}>
-      <View style={globalStyles.topHeader}>
-        <Text style={globalStyles.topHeaderFont}>Add Expense</Text>
-      </View>
+    <>
+      <View style={globalStyles.container}>
+        <View style={globalStyles.topHeader}>
+          <Text style={globalStyles.topHeaderFont}>Add Expense</Text>
+        </View>
 
-      <View
-        style={{
-          flexDirection: "row",
-          width: "90%",
-          paddingTop: 25,
-          alignItems: "center",
-          alignSelf: "flex-start",
-          justifyContent: "space-between",
-        }}
-      >
+        <View style={styles.title}>
+          <Text style={styles.titleFont}>Expenses</Text>
+
+          <Pressable style={styles.pressable} onPress={onAddExpensePress}>
+            <Image style={{ width: 20, height: 20 }} source={require("../../assets/plus_white.png")}></Image>
+            <Text style={{ paddingLeft: 10, color: "#FFF", fontWeight: "700" }}>Add Expense</Text>
+          </Pressable>
+        </View>
+
         <Text
           style={{
-            fontSize: 30,
-            fontWeight: "500",
-            paddingLeft: 20,
+            marginLeft: 20,
+            marginTop: 20,
+            paddingBottom: 10,
+            fontSize: 16,
           }}
         >
-          Expenses
+          {currentMonth} transactions
         </Text>
 
-        <Pressable style={styles.pressable} onPress={onAddExpensePress}>
-          <Image style={{ width: 20, height: 20 }} source={require("../../assets/plus_white.png")}></Image>
-          <Text style={{ paddingLeft: 10, color: "#FFF", fontWeight: "700" }}>Add Expense</Text>
-        </Pressable>
-      </View>
-      <Text
-        style={{
-          marginLeft: 20,
-          marginTop: 20,
-          paddingBottom: 10,
-          fontSize: 16,
-        }}
-      >
-        recent transactions
-      </Text>
+        <ScrollView>
+          {recentExpenses?.map((expense) => {
+            const category = allCategories.filter((c) => c.id == expense.categoryId);
+            console.log({ category, expense });
 
-      <ScrollView>
-        {recentExpenses?.map((expense) => {
-          const category = allCategories.filter((c) => c.id == expense.categoryId);
+            const subcategory = category[0]?.subcategories.filter((c) => c.id == expense.tag);
 
-          return (
-            <View style={styles.recent_expenses}>
-              <View style={{ flexDirection: "row" }}>
-                <Image source={require("../../assets/food.png")}></Image>
-                <View style={{ flexDirection: "column", paddingLeft: 12 }}>
-                  <Text style={{ fontSize: 16, fontWeight: "300" }}>{category[0].title}</Text>
-                  <Text style={{ fontSize: 12, fontWeight: "100" }}>{dayjs(expense.date).format("DD-ddd-MMM")}</Text>
+            return (
+              <View style={styles.recent_expenses}>
+                <View style={{ flexDirection: "row" }}>
+                  <Image style={styles.image_style} source={require("../../assets/food.png")}></Image>
+                  <View style={{ flexDirection: "column", paddingLeft: 12 }}>
+                    <Text style={{ fontSize: 14, fontWeight: "400" }}>{category[0].title}</Text>
+                    <Text style={{ fontSize: 12, fontWeight: "300" }}>{subcategory[0].title}</Text>
+
+                    {expense.notes && <Text style={{ fontSize: 12, fontWeight: "100" }}>{expense.notes}</Text>}
+
+                    <Text style={{ fontSize: 12, fontWeight: "100" }}>{dayjs(expense.date).format("DD-ddd-MMM")}</Text>
+                  </View>
                 </View>
+                <Text style={styles.transactions}>{formatCurrency(expense.spent)}</Text>
               </View>
-              <Text style={styles.transactions}>{formatCurrency(expense.spent)}</Text>
-            </View>
-          );
-        })}
-      </ScrollView>
-    </View>
+            );
+          })}
+        </ScrollView>
+      </View>
+    </>
   );
 };
 
@@ -102,15 +100,15 @@ const styles = StyleSheet.create({
     backgroundColor: "#38E4C4",
   },
   transactions: {
-    marginTop: 5,
-    paddingRight: 5,
-    fontSize: 18,
+    fontSize: 16,
     color: "#38E4C4",
-    fontWeight: "600",
+    fontWeight: "500",
+    justifyContent: "flex-end",
+    flexDirection: "row",
   },
   recent_expenses: {
     padding: 10,
-    marginBottom: 7,
+    marginBottom: 6,
     borderWidth: 2,
     borderRadius: 10,
     shadowOffset: { width: 3, height: 2 },
@@ -121,8 +119,24 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignSelf: "center",
+    alignItems: "center",
     width: "93%",
-    height: 60,
+  },
+  title: {
+    flexDirection: "row",
+    width: "90%",
+    paddingTop: 25,
+    alignItems: "center",
+    alignSelf: "flex-start",
+    justifyContent: "space-between",
+  },
+  titleFont: {
+    fontSize: 30,
+    fontWeight: "500",
+    paddingLeft: 20,
+  },
+  image_style: {
+    alignSelf: "center",
   },
 });
 

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
-import { Text, View, TextInput, StyleSheet, Pressable, UseRef } from "react-native";
-import { updateSelectedCategories } from "../../storage/database";
+import { Text, View, TextInput, StyleSheet, Pressable } from "react-native";
+import { newSelectedCategory } from "../../storage/database";
 import globalStyles from "../../styles";
 
 const SelectCategoryScreen = ({ navigation, route }) => {
@@ -9,7 +9,7 @@ const SelectCategoryScreen = ({ navigation, route }) => {
 
   const addBudget = async () => {
     selectedCategory.budgetAmount = budgetAmount;
-    await updateSelectedCategories(selectedCategory);
+    await newSelectedCategory(selectedCategory);
     navigation.popToTop();
   };
 
@@ -25,13 +25,7 @@ const SelectCategoryScreen = ({ navigation, route }) => {
         <Text style={globalStyles.topHeaderFont}>{selectedCategory.title}</Text>
       </View>
 
-      <View
-        style={{
-          flexDirection: "row",
-          alignSelf: "center",
-          paddingTop: 20,
-        }}
-      >
+      <View style={{ flexDirection: "row", alignSelf: "center", paddingTop: 20 }}>
         <Text style={{ fontSize: 16, color: "#5C5959" }}>average expense per month for November</Text>
       </View>
 
@@ -52,15 +46,7 @@ const SelectCategoryScreen = ({ navigation, route }) => {
           onPress={addBudget}
           style={{ ...styles.pressable, backgroundColor: +budgetAmount ? "#38E4C4" : "grey" }}
         >
-          <Text
-            style={{
-              alignContent: "center",
-              color: "#000",
-              fontSize: 24,
-            }}
-          >
-            Done
-          </Text>
+          <Text style={{ alignContent: "center", color: "#000", fontSize: 24 }}>Done</Text>
         </Pressable>
       </View>
     </View>

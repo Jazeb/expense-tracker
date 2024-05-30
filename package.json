@@ -9,6 +9,7 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@gorhom/bottom-sheet": "^4.5.1",
     "@react-native-async-storage/async-storage": "^1.19.5",
     "@react-native-community/progress-view": "^1.4.2",
     "@react-navigation/bottom-tabs": "^6.5.11",
@@ -16,6 +17,7 @@
     "@react-navigation/stack": "^6.3.20",
     "@types/react": "~18.2.14",
     "dayjs": "^1.11.10",
+    "eslint-plugin-react-hooks": "^4.6.0",
     "expo": "~49.0.15",
     "expo-splash-screen": "~0.20.5",
     "expo-status-bar": "~1.6.0",
@@ -35,5 +37,8 @@
     "@tsconfig/react-native": "^3.0.2",
     "@types/jest": "^29.5.8"
   },
-  "private": true
+  "private": true,
+  "repository": "https://github.com/Jazeb/expense-tracker.git",
+  "author": "Jazeb Munir <jazeb.jazi007@gmail.com>",
+  "license": "MIT"
 }

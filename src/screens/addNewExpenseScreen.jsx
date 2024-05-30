@@ -4,7 +4,7 @@ import { ScrollView, TextInput } from "react-native-gesture-handler";
 import dayjs from "dayjs";
 import updateLocale from "dayjs/plugin/updateLocale";
 
-import { allCategories, shortCutPrices, tags } from "../../constants";
+import { allCategories } from "../../constants";
 import * as storage from "../../storage/database";
 import globalStyles from "../../styles";
 
@@ -18,8 +18,17 @@ dayjs.updateLocale("en", {
 const AddNewExpenseScreen = ({ navigation }) => {
   const today = dayjs();
 
+  const [selectedSubCategories, setSelectedSubCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const onCategoryPress = (id) => setSelectedCategory(id);
+
+  const onCategoryPress = (id) => {
+    const _category = allCategories.find((c) => c.id == id);
+    setSelectedCategory(id);
+
+    if (_category?.subcategories.length) {
+      setSelectedSubCategories(_category.subcategories);
+    } else setSelectedSubCategories([]);
+  };
 
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [selectedPrice, setSelectedPrice] = useState(0);
@@ -67,7 +76,10 @@ const AddNewExpenseScreen = ({ navigation }) => {
   return (
     <View style={globalStyles.container}>
       <View style={globalStyles.topHeader}>
-        <Text style={globalStyles.topHeaderFont}>Add New Expense</Text>
+        {/* <Pressable style={{}} onPress={() => alert("ALERT")}>
+          <Image style={{ width: 30, height: 30 }} source={require("assets/back.png")}></Image>
+        </Pressable> */}
+        <Text style={{ ...globalStyles.topHeaderFont }}>Add New Expense</Text>
       </View>
 
       {/* expense input */}
@@ -89,13 +101,11 @@ const AddNewExpenseScreen = ({ navigation }) => {
             const color = item.id === selectedCategory ? "#38E4C4" : "#EEE";
             return (
               <Pressable
+                key={item.id}
                 onPress={() => onCategoryPress(item.id)}
-                style={{
-                  ...styles.catgoryBtn,
-                  backgroundColor: color,
-                }}
+                style={{ ...styles.catgoryBtn, backgroundColor: color }}
               >
-                <Text style={{}}>{item.title}</Text>
+                <Text>{item.title}</Text>
               </Pressable>
             );
           })}
@@ -106,16 +116,11 @@ const AddNewExpenseScreen = ({ navigation }) => {
       <Text style={styles.category_view}>select subcategory</Text>
       <View style={{ ...styles.shortcutBtnViews, paddingTop: 10 }}>
         <ScrollView style={{ height: 40 }} horizontal={true} showsHorizontalScrollIndicator={false}>
-          {tags.map((tag) => {
+          {(selectedSubCategories ?? []).map((tag) => {
             return (
               <Pressable
                 onPress={() => setTag(tag.id)}
-                style={[
-                  styles.catgoryBtn,
-                  {
-                    backgroundColor: tag.id === selectedTag ? "#38E4C4" : "#eee",
-                  },
-                ]}
+                style={[styles.catgoryBtn, { backgroundColor: tag.id === selectedTag ? "#38E4C4" : "#eee" }]}
               >
                 <Text style={{ padding: 9, marginLeft: 6 }}>{tag.title}</Text>
               </Pressable>
@@ -139,7 +144,7 @@ const AddNewExpenseScreen = ({ navigation }) => {
           const dayFormated = day.format("ddd");
           const selectedDayFormatted = dayjs(selectedDay).format("ddd");
           return (
-            <Pressable onPress={() => onDayPress(day)}>
+            <Pressable key={day} onPress={() => onDayPress(day)}>
               <Text
                 style={{
                   color: selectedDayFormatted == dayFormated ? "#38E4C4" : "#313131",
@@ -155,17 +160,14 @@ const AddNewExpenseScreen = ({ navigation }) => {
         })}
       </View>
 
-      <View
-        style={{
-          paddingTop: 20,
-          flexDirection: "row",
-          justifyContent: "center",
-        }}
-      >
+      <View style={{ paddingTop: 20, flexDirection: "row", justifyContent: "center" }}>
         <Pressable
           disabled={disableAddButton}
           onPress={onAddExpensePress}
-          style={{ backgroundColor: !disableAddButton ? "#38E4C4" : "gray", ...styles.add_btn }}
+          style={{
+            backgroundColor: !disableAddButton ? "#38E4C4" : "gray",
+            ...styles.add_btn,
+          }}
         >
           <Text style={{ fontSize: 20, color: "#FFF", fontWeight: "700" }}>Add</Text>
         </Pressable>
@@ -194,7 +196,13 @@ const styles = StyleSheet.create({
     paddingLeft: 20,
     justifyContent: "flex-start",
   },
-  category_view: { fontSize: 16, flexDirection: "row", alignSelf: "flex-start", marginLeft: 20, marginTop: 20 },
+  category_view: {
+    fontSize: 16,
+    flexDirection: "row",
+    alignSelf: "flex-start",
+    marginLeft: 20,
+    marginTop: 20,
+  },
   comment_input_text: {
     marginTop: 5,
     height: 50,

@@ -10,3 +10,5 @@ export const formatCurrency = (amnt) =>
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(amnt);
+
+export const generateCategoryId = () => Math.floor(Math.random() * 90 + 10);

@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { allCategories } from "../constants";
 
 const getData = (key) =>
-  new Promise(async (resolve, reject) =>
+  new Promise((resolve, reject) =>
     AsyncStorage.getItem(key)
       .then((data) => resolve(data ? JSON.parse(data) : null))
       .catch((err) => reject(err))
@@ -19,10 +19,11 @@ export const storeData = async (key, value) => {
 
 export const getAllCategories = () =>
   new Promise(
+    (resolve, reject) =>
+      getData("categories")
+        .then((data) => resolve(data))
+        .catch((err) => reject(err))
     // (resolve) => resolve(allCategories)
-    getData("categories")
-      .then((data) => resolve(data))
-      .catch((err) => reject(err))
   );
 
 export const getSelectedCategories = () =>
@@ -32,17 +33,25 @@ export const getSelectedCategories = () =>
       .catch((err) => reject(err))
   );
 
-export const updateSelectedCategories = async (data) => {
+function makeArrayUnique(array, key) {
+  const uniqueKeys = new Set();
+  return array.filter((obj) => !uniqueKeys.has(obj[key]) && uniqueKeys.add(obj[key]));
+}
+
+export const newSelectedCategory = async (data) => {
   const key = "selectedCategories";
   const _selectedCategories = await getData(key);
 
   if (_selectedCategories && _selectedCategories.length) {
     _selectedCategories.push(data);
 
-    return _selectedCategories && (await storeData(key, _selectedCategories));
+    console.log({ _selectedCategories });
+
+    // const uniqueCategories = makeArrayUnique(_selectedCategories, "id");
+    // console.log(uniqueCategories);
+    return await storeData(key, _selectedCategories);
   } else {
     const categories = new Array(data);
-
     return await storeData(key, categories);
   }
 };
@@ -55,7 +64,7 @@ export const deleteData = (key) =>
   );
 
 export const initializeCategories = async () => {
-  console.log("Categories added ================");
+  console.log("Categories added ================", allCategories);
   return await storeData("categories", allCategories);
 };
 
@@ -85,17 +94,29 @@ export const getExpenseByCategory = async (categoryId) => {
   const _currentMonthExpenses = await getExpenses("11/2023"); // current month
   const categories = _currentMonthExpenses.filter((item) => item.categoryId == categoryId);
 
-  console.log({ categoryId, _currentMonthExpenses, categories });
-
   const totalSpent = categories.reduce((sum, c) => sum + +c.spent, 0);
-  console.log({ totalSpent });
   return totalSpent;
 };
 
 export const addNewCategory = async (category) => {
   const allCategories = await getAllCategories();
   allCategories.push(category);
+  console.log({ allCategories });
+  const res = await storeData("categories", allCategories);
+  console.log({ res });
+  return;
+};
 
-  const key = "categories";
-  return await AsyncStorage.setItem(key, allCategories);
+export const updateBudgetAmount = async (selectedCategory) => {
+  const key = "selectedCategories";
+  const _selectedCategories = await getSelectedCategories();
+  _selectedCategories.map((c) => {
+    if (c.id == selectedCategory.id) {
+      console.log("yes matchesd ------------------");
+      console.log({ c, selectedCategory });
+      c.budgetAmount = selectedCategory.budgetAmount;
+    }
+  });
+
+  return await storeData(key, _selectedCategories);
 };

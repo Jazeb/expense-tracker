@@ -1,12 +1,13 @@
-import { Text, Image, View, StyleSheet, Pressable, ScrollView, TouchableOpacity, Alert } from "react-native";
-import { getAllCategories, getSelectedCategories } from "../../storage/database";
+import { Text, Image, View, StyleSheet, Pressable, ScrollView, TouchableOpacity } from "react-native";
+import * as storage from "../../storage/database";
 import React, { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import BottomSheet from "@gorhom/bottom-sheet";
 import globalStyle from "../../styles";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 const addExpenseImage = require("assets/plus.png");
-import { BottomSheetModalProvider, BottomSheetModal, BottomSheetScrollView } from "@gorhom/bottom-sheet";
+
 import { TextInput } from "react-native-gesture-handler";
+import * as shared from "../../shared";
 
 // const AddNewCategory = () => {
 //   const bottomSheetRef = useRef(null);
@@ -35,52 +36,78 @@ import { TextInput } from "react-native-gesture-handler";
 //   );
 // };
 
+// const CategoryImage = ({ category }) => {
+//   console.log({ category });
+//   const icons = {};
+//   return <Image source={require(category.icon)} />;
+// };
+
 const CategoryItems = ({ category }) => {
   const navigation = useNavigation();
   const onCategorySelected = (category) => navigation.navigate("AddNewBudgetScreen", { selectedCategory: category });
-
+  console.log(category);
   return (
     <Pressable onPress={() => onCategorySelected(category)}>
       <View style={styles.categoryItems}>
         <View style={{ flexDirection: "column", flex: 1 }}>
-          {/* <Image source={require(category.icon)} /> */}
+          {/* <Image source={require("assets/categoryIcons/medical.png")} /> */}
+          {/* <CategoryImage category={category} /> */}
           <Text style={styles.categoryItemFont}>{category.title}</Text>
+          <Text style={{ marginTop: 2, fontSize: 12, fontWeight: "300", color: "#4F4F4F", marginLeft: 13 }}>
+            {category.subcategories?.map((c) => c?.title).join(", ")}
+          </Text>
         </View>
         <Image style={styles.plusBtn} source={addExpenseImage} />
       </View>
     </Pressable>
   );
 };
+
 const SelectCategoryScreen = ({}) => {
   const [categories, setCategories] = useState([]);
   const [addNewCategory, setAddNewCategory] = useState(false);
+  const [newCategory, setNewCategory] = useState({ id: "", title: "", icon: "", subCategories: [] });
 
   const fetchCategories = async () => {
-    const _allCategories = await getAllCategories();
+    const _allCategories = await storage.getAllCategories();
+    const _selectedCategories = await storage.getSelectedCategories();
 
-    const _selectedCategories = await getSelectedCategories();
+    console.log({ _selectedCategories });
+    console.log({ _allCategories });
     if (!_selectedCategories) setCategories(_allCategories);
     else {
       const _selectCategoryIds = _selectedCategories.map((c) => c.id);
       const _unselectedCategories = _allCategories.filter((c) => !_selectCategoryIds.includes(c.id));
+      console.log("setting...");
+      console.log({ _unselectedCategories });
       setCategories(_unselectedCategories);
     }
   };
 
   const bottomSheetRef = useRef(null);
-  const snapPoints = useMemo(() => ["25%", "50%"], []);
+  const snapPoints = useMemo(() => ["25%"], []);
 
-  const handleSheetChanges = useCallback((index) => {
-    console.log("handleSheetChanges", index);
-  }, []);
+  useFocusEffect(
+    React.useCallback(() => {
+      console.log("in callback");
+      let isActive = true;
+      isActive && fetchCategories();
+      return () => (isActive = false);
+    }, [])
+  );
 
-  useEffect(() => {
-    fetchCategories();
-  }, []);
+  const onAddNewCategoryPress = async () => {
+    const _newCategory = {
+      id: shared.generateCategoryId(),
+      title: newCategory.title,
+      icon: "",
+      subCategories: newCategory.subCategories,
+    };
+    setAddNewCategory(false);
 
-  const onAddNewCategoryPress = () => {
-    // const addNewCategory();
+    return await storage.addNewCategory(_newCategory);
   };
+
   return (
     <>
       <View style={globalStyle.container}>
@@ -100,7 +127,7 @@ const SelectCategoryScreen = ({}) => {
         {/* category items */}
         <ScrollView style={{ flex: 1, flexDirection: "column" }}>
           {(categories || []).map((category) => (
-            <CategoryItems category={category} />
+            <CategoryItems key={category.id} category={category} />
           ))}
         </ScrollView>
       </View>
@@ -108,13 +135,19 @@ const SelectCategoryScreen = ({}) => {
       {addNewCategory && (
         <>
           <TouchableOpacity style={styles.bottomsheet_touchable} onPress={() => setAddNewCategory(false)} />
-          <BottomSheet ref={bottomSheetRef} index={1} enablePanDownToClose={true} snapPoints={snapPoints}>
+          <BottomSheet ref={bottomSheetRef} index={0} enablePanDownToClose={true} snapPoints={snapPoints}>
             <View style={styles.contentContainer}>
               <Text>Enter Category</Text>
-              <TextInput style={styles.new_category_font}></TextInput>
+              <TextInput
+                onChangeText={(title) =>
+                  setNewCategory((prev) => ({
+                    ...prev,
+                    title,
+                  }))
+                }
+                style={styles.new_category_font}
+              ></TextInput>
 
-              <Text style={{ marginTop: 40 }}>Enter Sub Category</Text>
-              <TextInput style={styles.new_category_font}></TextInput>
               <Pressable
                 // disabled={disableAddButton}
                 onPress={onAddNewCategoryPress}
@@ -122,11 +155,6 @@ const SelectCategoryScreen = ({}) => {
               >
                 <Text style={{ fontSize: 20, fontWeight: "700" }}>Add</Text>
               </Pressable>
-              {/* <TextInput style={{ marginTop: 30 }} placeholder="Enter SubCategory"></TextInput> */}
-              {/* <Text>Category 🎉</Text>
-              <TouchableOpacity onPress={() => setAddNewCategory(false)}>
-                <Text>Submit</Text>
-              </TouchableOpacity> */}
             </View>
           </BottomSheet>
         </>
@@ -145,18 +173,18 @@ const styles = StyleSheet.create({
   contentContainer: {
     flex: 1,
     marginLeft: 20,
-    paddingVertical: 30,
+    paddingVertical: 20,
     flexDirection: "column",
     // justifyContent: "",
     // alignItems: "flex-start",
   },
   plusBtn: {
-    width: 50,
-    height: 50,
+    width: 30,
+    height: 30,
   },
   categoryItemFont: {
-    fontSize: 18,
-    fontWeight: 400,
+    fontSize: 16,
+    fontWeight: "400",
     color: "#4F4F4F",
     marginLeft: 13,
   },
@@ -196,13 +224,14 @@ const styles = StyleSheet.create({
     height: 65,
   },
   new_category_font: {
-    marginTop: 10,
+    marginTop: 8,
     borderColor: "#FFF",
     width: "90%",
     height: 50,
     backgroundColor: "#eee",
     fontSize: 16,
     borderRadius: 10,
+    paddingLeft: 10,
   },
   add_newcategory_btn: {
     flexDirection: "row",
@@ -210,7 +239,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: "90%",
     height: 46,
-    marginTop: 25,
+    marginTop: 20,
     borderRadius: 24,
   },
 });

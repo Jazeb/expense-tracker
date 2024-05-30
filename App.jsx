@@ -6,9 +6,8 @@ import { Text, Image, View, StyleSheet } from "react-native";
 import HomeStack from "./HomeStack";
 import BudgetStack from "./BudgetStack";
 
-import BudgetScreen from "./src/screens/budget";
-import HomeScreen from "./src/screens/home";
 import ExpenseScreen from "./src/screens/expense";
+import IncomeScreen from "./src/screens/income";
 import StatsScreen from "./src/screens/stats";
 
 import { initializeCategories, deleteData } from "./storage/database";
@@ -20,9 +19,10 @@ const CustomTabIcon = ({ type, focused, size, tintColor }) => {
     expense: require(`./assets/bottomTab/expenses-inactive.png`),
     budget: require(`./assets/bottomTab/budget-inactive.png`),
     stats: require(`./assets/bottomTab/home-active.png`),
+    income: require(`./assets/bottomTab/income_tab-inactive.png`),
   };
 
-  return <Image source={iconImages[type]} style={{ width: size, height: size, tintColor }} />;
+  return <Image source={iconImages[type]} style={{ width: 30, height: 30, tintColor }} />;
 };
 
 const App = () => {
@@ -58,9 +58,7 @@ const App = () => {
           component={BudgetStack}
           options={{
             headerShown: false,
-            tabBarIcon: ({ color, size }) => (
-              <CustomTabIcon type={"budget"} focused={true} tintColor={color} size={size} />
-            ),
+            tabBarIcon: ({ color, size }) => <CustomTabIcon type={"budget"} focused={true} tintColor={color} />,
           }}
         />
 
@@ -70,11 +68,21 @@ const App = () => {
           component={ExpenseScreen}
           options={{
             headerShown: false,
-            tabBarIcon: ({ color, size }) => (
-              <CustomTabIcon type={"expense"} focused={true} tintColor={color} size={size} />
-            ),
+            tabBarIcon: ({ color, size }) => <CustomTabIcon type={"expense"} focused={true} tintColor={color} />,
           }}
         />
+
+        {/* income tab */}
+        <Tab.Screen
+          name="Income"
+          component={IncomeScreen}
+          options={{
+            headerShown: false,
+            tabBarIcon: ({ color }) => <CustomTabIcon type={"income"} focused={true} tintColor={color} />,
+          }}
+        />
+
+        {/* stats screen */}
         <Tab.Screen name="Stats" component={StatsScreen} />
       </Tab.Navigator>
     </NavigationContainer>
